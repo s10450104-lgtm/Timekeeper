@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>時光師 — 第一版</title>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --fg: #d8e2f0;
+    --accent: #7fd4ff;
+    --gold: #e6c87a;
+    --dim: #6b7a90;
+    --panel: #121823;
+    --border: #2a3444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Noto Serif TC", "PMingLiU", "Microsoft JhengHei", serif;
+    line-height: 1.8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+  }
+  .stage {
+    width: 100%;
+    max-width: 760px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-shadow: 0 0 40px rgba(127,212,255,0.08);
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--dim);
+    font-size: 13px;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+  .scene-title {
+    color: var(--accent);
+    font-size: 18px;
+    margin: 18px 0 10px;
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+  }
+  .text {
+    white-space: pre-wrap;
+    margin: 12px 0;
+  }
+  .choice {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin: 8px 0;
+    padding: 12px 16px;
+    background: #1a2230;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--fg);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    transition: all 0.15s;
+  }
+  .choice:hover {
+    background: #22304a;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .book {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px dashed var(--gold);
+    border-radius: 8px;
+    background: rgba(230,200,122,0.05);
+  }
+  .book-title {
+    color: var(--gold);
+    font-size: 14px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .book-entry {
+    font-size: 14px;
+    color: var(--dim);
+    margin: 4px 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--gold);
+  }
+  .restart {
+    margin-top: 24px;
+    text-align: center;
+  }
+  .restart button {
+    background: var(--gold);
+    color: #0a0e14;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .fade { animation: fadein 0.6s; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+<div class="stage" id="stage"></div>
+<script>
+const stage = document.getElementById('stage');
+const bookEntries = [];
+
+function render(html) {
+  stage.innerHTML = html;
+  stage.classList.remove('fade');
+  void stage.offsetWidth;
+  stage.classList.add('fade');
+}
+
+function addBookEntry(text) {
+  bookEntries.push(text);
+}
+
+function showBook() {
+  if (bookEntries.length === 0) return '';
+  return `<div class="book"><div class="book-title">天書 · 實體刻痕</div>` +
+    bookEntries.map(e => `<div class="book-entry">${e}</div>`).join('') +
+    `</div>`;
+}
+
+function sceneIntro() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">序</div>
+    <div class="text">古戰場。
+
+你站在它的邊緣，腳下是幾百年前的焦土。風裡有股金屬的冷意，混著什麼燒過的氣味——那是規則碎裂之後才會有的味道。
+
+戰場很大。遠處的天空還有裂痕，像有人用刀子在天上劃了一道，到現在還沒癒合。地上散落著斷牆、碎柱、融化的金屬、結晶化的灰燼。有些地方的土是黑的，有些地方泛著不自然的光。
+
+沒有人。很久以前就沒有人了。只有風，和那些還沒完全消散的痕跡。
+
+你帶著天書和墨筆，以時光師的身份降臨。你的任務只有一個：把這一刻記下來。</div>
+    <button class="choice" onclick="sceneCrystal()">走進戰場</button>
+  `);
+}
+
+function sceneCrystal() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">一</div>
+    <div class="text">焦土踩起來鬆鬆的，每一步都有一點回聲。
+
+半空中有東西在發光。金色的線條和青色的紋路糾纏在一起，像兩股水流撞了之後凍住了。有些地方已經結晶，半透明，光從裡面透出來——規則晶岩。舊的規則碎了，新的規則正在長出來，就停在這個瞬間。
+
+你停下腳步，抬起墨筆。天書在風裡自動翻開第一頁。</div>
+    <button class="choice" onclick="recordCrystal()">把這一幕記下來</button>
+    <button class="choice" onclick="skipCrystal()">先不記，看看地上</button>
+  `);
+}
+
+function recordCrystal() {
+  addBookEntry('第一頁：規則晶岩——金色與青色的法則線條冷卻凝結，停在重構的瞬間。');
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">一 · 記</div>
+    <div class="text">墨筆劃過紙面。半空中的結晶被墨跡吸了進去，光線暗了一瞬，然後天書的頁面開始自己浮出紋路。
+
+記下了。</div>
+    ${showBook()}
+    <button class="choice" onclick="sceneArtifact()">低頭看地上</button>
+  `);
+}
+
+function skipCrystal() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">一 · 觀</div>
+    <div class="text">你收起墨筆，暫時不記空中。低頭看地上。
+
+地上有東西。</div>
+    <button class="choice" onclick="sceneArtifact()">走近去看</button>
+  `);
+}
+
+function sceneArtifact() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">二</div>
+    <div class="text">地上散落著熔在一起的東西。形狀已經看不出原來是什麼——一半是金屬的刻印，一半是靈脈的陣紋，兩種紋路在上面交纏，像被強行揉成一團。
+
+表面的紋路還在，只是歪了、裂了、有些地方已經變色。摸起來一邊冷、一邊熱。</div>
+    <button class="choice" onclick="touchArtifact()">伸手去摸</button>
+    <button class="choice" onclick="sealDirect()">不摸，直接記</button>
+  `);
+}
+
+function touchArtifact() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">二 · 觸</div>
+    <div class="text">指尖碰到殘骸的瞬間，冷意從皮膚鑽進來，接著是溫熱。
+
+兩種規則還在裡面打架，只是打得慢了。你閉上眼睛，讓它們在你手裡過一遍。
+
+記憶比眼睛可靠。</div>
+    <button class="choice" onclick="sealArtifact(true)">記下來</button>
+  `);
+}
+
+function sealDirect() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">二 · 記</div>
+    <div class="text">你沒有伸手。作為時光師，你只記錄，不介入。</div>
+    <button class="choice" onclick="sealArtifact(false)">把這件殘骸記下來</button>
+  `);
+}
+
+function sealArtifact(touched) {
+  const desc = touched
+    ? '第二頁：異變殘骸——兩種紋路熔成一體，親手觸摸感受規則殘溫後封入天書。'
+    : '第二頁：異變殘骸——兩種紋路熔成一體，未觸碰，直接封入天書。';
+  addBookEntry(desc);
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">三 · 封</div>
+    <div class="text">墨筆落下，殘骸的影像和溫度被吸進頁面。紙頁合上，光線暗了一截。
+
+這件東西就這樣被收進歲月的夾縫裡。等這個時代被遺忘得差不多了，它會再見到光。</div>
+    ${showBook()}
+    <button class="choice" onclick="sceneEnd()">離開戰場</button>
+  `);
+}
+
+function sceneEnd() {
+  render(`
+    <h1>時光師</h1>
+    <div class="subtitle">第一版</div>
+    <div class="scene-title">終</div>
+    <div class="text">你背著天書，消失在暮色裡。
+
+天書裡記了兩頁：一頁是空中結晶的紋路，一頁是殘骸的溫度。
+
+今天帶走的東西就這些。</div>
+    ${showBook()}
+    <div class="restart"><button onclick="location.reload()">重新開始</button></div>
+  `);
+}
+
+sceneIntro();
+</script>
+</body>
+</html>
