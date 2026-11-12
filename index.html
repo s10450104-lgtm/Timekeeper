@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>時光師 — 第二版</title>
+<title>時光師 — 文字互動體驗</title>
 <style>
   :root {
     --bg: #0a0e14;
@@ -13,6 +13,7 @@
     --dim: #6b7a90;
     --panel: #121823;
     --border: #2a3444;
+    --red: #ff6b6b;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -56,6 +57,16 @@
     margin: 18px 0 10px;
     border-left: 3px solid var(--accent);
     padding-left: 10px;
+  }
+  .act-title {
+    color: var(--gold);
+    font-size: 14px;
+    margin: 24px 0 8px;
+    text-align: center;
+    letter-spacing: 2px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
   }
   .text {
     white-space: pre-wrap;
@@ -101,6 +112,16 @@
     padding-left: 12px;
     border-left: 2px solid var(--gold);
   }
+  .inv {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #0f1520;
+    font-size: 13px;
+    color: var(--dim);
+  }
+  .inv b { color: var(--accent); }
   .restart {
     margin-top: 24px;
     text-align: center;
@@ -125,6 +146,7 @@
 <script>
 const stage = document.getElementById('stage');
 const bookEntries = [];
+let inventory = { pages: 0, touched: false, riftSeen: false, sealed: 0, explored: false };
 
 function render(html) {
   stage.innerHTML = html;
@@ -135,23 +157,35 @@ function render(html) {
 
 function addBookEntry(text) {
   bookEntries.push(text);
+  inventory.pages = bookEntries.length;
 }
 
 function showBook() {
   if (bookEntries.length === 0) return '';
-  return `<div class="book"><div class="book-title">天書 · 實體刻痕</div>` +
-    bookEntries.map(e => `<div class="book-entry">${e}</div>`).join('') +
+  return `<div class="book"><div class="book-title">天書 · 實體刻痕（${bookEntries.length} 頁）</div>` +
+    bookEntries.map((e, i) => `<div class="book-entry">第 ${i+1} 頁：${e}</div>`).join('') +
     `</div>`;
 }
 
+function showInv() {
+  const items = [];
+  items.push(`天書頁數：${inventory.pages}`);
+  if (inventory.touched) items.push('已觸摸異變殘骸');
+  if (inventory.riftSeen) items.push('已窺視時光裂隙');
+  if (inventory.explored) items.push('已探索遺跡');
+  if (inventory.sealed > 0) items.push(`已封印 ${inventory.sealed} 件`);
+  return `<div class="inv"><b>背包：</b>${items.join(' · ')}</div>`;
+}
+
+// ==================== 第一幕：降臨 ====================
 function sceneIntro() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">序 · 降臨</div>
+    <div class="act-title">第一幕 · 降臨</div>
     <div class="text">古戰場。
 
-你站在它的邊緣。風裡有股金屬的冷意，混著什麼燒過的氣味——那是規則碎裂之後才會有的味道，幾百年了，還沒散。
+你站在它的邊緣，風裡有股金屬的冷意，混著什麼燒過的氣味——那是規則碎裂之後才會有的味道，幾百年了，還沒散。
 
 戰場很大。遠處的天空還有裂痕，像有人用刀子在天上劃了一道，到現在還沒癒合。地上散落著斷牆、碎柱、融化的金屬、結晶化的灰燼。有些地方的土是黑的，有些地方泛著不自然的光。
 
@@ -168,23 +202,31 @@ function sceneEnter() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">序 · 踏入</div>
+    <div class="act-title">第一幕 · 踏入</div>
     <div class="text">第一步踩下去，焦土鬆鬆的，腳底能感覺到細小的顆粒被壓碎。空氣比邊緣更冷，也更安靜。
 
 你往戰場深處走。兩側的斷牆越走越高，有些牆上還留著半截的浮雕，但圖案已經被時間磨得看不清楚。一截手臂粗的金屬柱子歪斜地插在土裡，表面的銹跡下面是暗紅色的金屬本色。
 
 走了大約十分鐘，你來到一片開闊地。這裡的破壞最嚴重——地面有一道長長的溝，像被什麼巨大的力量從中間劈開。溝的兩邊，土的顏色不同：一邊泛著暗金色，一邊透著青綠。
 
-你停下來。這裡就是主戰場。</div>
-    <button class="choice" onclick="sceneCrystal()">觀察四周</button>
+你停下來。這裡就是主戰場。
+
+空氣裡的壓迫感更強了。不是令人窒息的那種，而是一種重量感，像是整個空間的密度比外面高。你深呼吸了一下，讓自己習慣這種感覺。
+
+主戰場的範圍比你想象的大。從你站的位置往左看，能看到一排半埋在土裡的石柱，像某種儀式建築的遺跡。往右看，地面有一道更深的溝，溝壁上嵌著金屬碎片，閃著暗紅的光。正前方，遠處的天空裂痕最明顯——一道 鋸齒狀的 的縫隙，像被什麼東西從裡面撕開的。
+
+你決定先從近處開始探索。</div>
+    ${showInv()}
+    <button class="choice" onclick="sceneCrystal()">觀察四周的晶岩</button>
   `);
 }
 
+// ==================== 第二幕：探索 ====================
 function sceneCrystal() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">一 · 規則晶岩</div>
+    <div class="act-title">第二幕 · 規則晶岩</div>
     <div class="text">半空中有東西在發光。
 
 金色的線條和青色的紋路糾纏在一起，像兩股水流撞了之後凍住了。有些地方已經結晶，半透明，光從裡面透出來。結晶的形狀不規則——有的像冰柱，有的像樹枝，有的根本說不出形狀，只是懸在半空中，微微震動。
@@ -193,7 +235,12 @@ function sceneCrystal() {
 
 你近距離看了一塊晶岩。裡面的紋路不是靜止的——它們在動，緩慢地、幾乎看不出來地流動。金色的線條往一個方向拉，青色的紋路往另一個方向捲，兩者在中間的地方互相侵蝕、互相融合，形成一種你沒見過的顏色。
 
-天書在風裡自動翻開第一頁。</div>
+晶岩的底部連著地面——不是插在土裡，而是從土裡長出來的，像樹根。根部的地方土已經變成黑色，像是被高溫燒過。晶岩的頂端則伸向天空，頂端的光最亮，顏色也最純粹——接近白色，但不是白色，是一種你說不出名字的顏色。
+
+你蹲下來，把手放在晶岩的根部附近。土是涼的，但有一種微微的震動，像心跳。間隔大約兩秒一次。
+
+你站起來，決定記下來。</div>
+    ${showInv()}
     <button class="choice" onclick="recordCrystal()">把這一幕記下來</button>
     <button class="choice" onclick="observeCrystal()">先仔細觀察，再決定記不記</button>
   `);
@@ -203,27 +250,33 @@ function observeCrystal() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">一 · 觀察</div>
-    <div class="text">你沒有立刻動筆。你繞著晶岩走了半圈，觀察它的細節。
+    <div class="act-title">第二幕 · 觀察</div>
+    <div class="text">你繞著晶岩走了半圈，觀察它的細節。
 
-晶岩的底部連著地面——不是插在土裡，而是從土裡長出來的，像樹根。根部的地方土已經變成黑色，像是被高溫燒過。晶岩的頂端則伸向天空，頂端的光最亮，顏色也最純粹——接近白色，但不是白色，是一種你說不出名字的顏色。
+晶岩的表面不是光滑的——它有紋理，像樹皮，但比樹皮更細膩。紋理的走向和內部的法則線條一致：金色的部分紋理往左下傾斜，青色的部分紋理往右上捲曲。
 
-你蹲下來，把手放在晶岩的根部附近。土是涼的，但有一種微微的震動，像心跳。
+你注意到晶岩的底部有一個細小的裂縫，裂縫裡滲出一滴液體。液體的顏色和晶岩內部的光一樣——半透明，帶著金色和青色的微光。液體滴到地上，被焦土吸收了，留下一個小小的濕點，很快乾燥。
+
+你數了數，這塊晶岩大約有你半個人高。它不是最大的——遠處還有一塊更大的，大約一人高，但那塊的光更亮，你暂时不想靠近。
 
 你站起來，決定記下來。</div>
+    ${showInv()}
     <button class="choice" onclick="recordCrystal()">記下來</button>
   `);
 }
 
 function recordCrystal() {
-  addBookEntry('第一頁：規則晶岩——金色與青色的法則線條冷卻凝結，停在重構的瞬間。晶岩從地面長出，頂端伸向天空，內部紋路仍在緩慢流動。');
+  addBookEntry('第一頁：規則晶岩——金色與青色的法則線條冷卻凝結，停在重構的瞬間。晶岩從地面長出，頂端伸向天空，內部紋路仍在緩慢流動。底部有裂縫滲出液體。');
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">一 · 記</div>
+    <div class="act-title">第二幕 · 記</div>
     <div class="text">墨筆劃過紙面。半空中的結晶被墨跡吸了進去，光線暗了一瞬，然後天書的頁面開始自己浮出紋路——不是你的字，是晶岩自己的紋路被複製到了紙上。
 
-記下了。天書的第一頁不再是空白。</div>
+記下了。天書的第一頁不再是空白。
+
+你翻了翻天書，確認第一頁的內容清晰可讀。晶岩的紋路在紙面上微微發光，像還活著。</div>
+    ${showInv()}
     ${showBook()}
     <button class="choice" onclick="sceneArtifact()">低頭看地上</button>
   `);
@@ -233,14 +286,19 @@ function sceneArtifact() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">二 · 異變殘骸</div>
+    <div class="act-title">第三幕 · 異變殘骸</div>
     <div class="text">地上散落著熔在一起的東西。
 
-形狀已經看不出原來是什麼。一半是金屬的刻印——你能辨認出一些符號，像是某種文字，但不是你認識的任何一種。另一半是靈脈的陣紋，曲線流暢，和金屬刻印的直線形成強烈對比。
+形狀已經看不出原來是什麼。一半是金屬的刻印——你能辨認出一些符號，像是某種文字，但不是你認識的任何一種。符號的排列有規律，不是隨機的，像是某種語言或代碼。另一半是靈脈的陣紋，曲線流暢，和金屬刻印的直線形成強烈對比。
 
 兩種紋路在上面交纏，像被強行揉成一團。表面有些地方已經變色——金屬的部分泛著暗紅，陣紋的部分透著幽藍。接縫的地方有一圈一圈的波紋，像是兩股力量在那裡反覆碰撞留下的印記。
 
-摸起來一邊冷、一邊熱。冷的那一邊是金屬，熱的那一邊是陣紋。溫度的分界線不是平滑的，而是鋸齒狀的，像兩國的邊境。</div>
+摸起來一邊冷、一邊熱。冷的那一邊是金屬，熱的那一邊是陣紋。溫度的分界線不是平滑的，而是鋸齒狀的，像兩國的邊境。
+
+殘骸的一端有一道缺口，切面很平滑，不是撕裂的，是切的。切面的地方金屬和陣紋都有，說明切的時候兩者已經融合了。
+
+地上不只一件殘骸。你數了數，方圓十步內散落著大約七八件，大小不一。最大的有你手臂長，最小的只有手掌大。它們都呈現同樣的特徵：兩種紋路熔在一起，一冷一熱。</div>
+    ${showInv()}
     <button class="choice" onclick="touchArtifact()">伸手去摸</button>
     <button class="choice" onclick="examineArtifact()">先仔細觀察，不碰</button>
     <button class="choice" onclick="sealDirect()">不摸，直接記</button>
@@ -251,31 +309,38 @@ function examineArtifact() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">二 · 觀察</div>
+    <div class="act-title">第三幕 · 觀察</div>
     <div class="text">你蹲下來，不碰，只看。
 
 殘骸的大小約莫是一個人的手臂長。中間的部分最厚，兩端漸漸變薄。金屬刻印的符號在中間的部分最密集，往兩端越來越稀疏。陣紋則相反——兩端最複雜，中間反而簡單。
 
 你注意到殘骸的一端有一道缺口，像是被什麼東西切過。缺口的切面很平滑，不是撕裂的，是切的。切面的地方金屬和陣紋都有，說明切的時候兩者已經融合了。
 
+你還注意到，這些殘骸的排列不是隨機的。它們散落的方向有一個規律——全部指向同一個方向，像是被爆炸的衝擊波吹散的。你順著它們指向的方向看，遠處有一個更大的東西——可能是另一件更大的殘骸，或者是某種建築的遺跡。
+
 你站起來。這些細節你都記下了，但天書上還沒記。</div>
+    ${showInv()}
     <button class="choice" onclick="touchArtifact()">伸手去摸</button>
     <button class="choice" onclick="sealDirect()">不摸，直接記</button>
   `);
 }
 
 function touchArtifact() {
+  inventory.touched = true;
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">二 · 觸</div>
+    <div class="act-title">第三幕 · 觸</div>
     <div class="text">指尖碰到殘骸的瞬間，冷意從皮膚鑽進來，接著是溫熱。
 
 兩種規則還在裡面打架，只是打得慢了。你閉上眼睛，讓它們在你手裡過一遍。冷的那部分像金屬被放在雪地裡，熱的那部分像剛從火爐裡拿出來。兩種溫度在你指尖交界的地方形成一種說不出的感覺——不是不適，是一種陌生。
 
-你感覺到殘骸裡有東西在流動。不是液體，是某種力量，像脈搏一樣有節奏。間隔大約兩秒一次。
+你感覺到殘骸裡有東西在流動。不是液體，是某種力量，像脈搏一樣有節奏。間隔大約兩秒一次。你數了十次，節奏沒有變化，穩定得像心跳。
+
+你還感覺到殘骸裡有某種「記憶」。不是你的記憶，是殘骸自己的——它記得被切開的瞬間，記得兩股力量碰撞的感覺。這些記憶不是語言，是 感受：壓力、熱度、撕裂、然後是冷卻。
 
 記憶比眼睛可靠。</div>
+    ${showInv()}
     <button class="choice" onclick="sealArtifact(true)">記下來</button>
   `);
 }
@@ -284,54 +349,47 @@ function sealDirect() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">二 · 記</div>
-    <div class="text">你沒有伸手。作為時光師，你只記錄，不介入。殘骸的溫度和紋路，你用眼睛記下了。</div>
+    <div class="act-title">第三幕 · 記</div>
+    <div class="text">你沒有伸手。作為時光師，你只記錄，不介入。殘骸的溫度和紋路，你用眼睛記下了。你注意到它們的排列方向、大小差異、紋路密度，這些都是有價值的資訊。</div>
+    ${showInv()}
     <button class="choice" onclick="sealArtifact(false)">把這件殘骸記下來</button>
   `);
 }
 
 function sealArtifact(touched) {
   const desc = touched
-    ? '第二頁：異變殘骸——兩種紋路熔成一體，親手觸摸感受規則殘溫與脈動後封入天書。'
-    : '第二頁：異變殘骸——兩種紋路熔成一體，未觸碰，以觀察方式記入天書。';
+    ? '第二頁：異變殘骸——兩種紋路熔成一體，親手觸摸感受規則殘溫與脈動後封入天書。殘骸排列方向一致，切面平滑。'
+    : '第二頁：異變殘骸——兩種紋路熔成一體，未觸碰，以觀察方式記入天書。殘骸排列方向一致，切面平滑。';
   addBookEntry(desc);
+  inventory.sealed++;
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">三 · 封</div>
+    <div class="act-title">第三幕 · 封</div>
     <div class="text">墨筆落下，殘骸的影像和溫度被吸進頁面。紙頁合上，光線暗了一截。
 
 這件東西就這樣被收進歲月的夾縫裡。等這個時代被遺忘得差不多了，它會再見到光。
 
-天書上現在有兩頁了。你翻了翻，確認兩頁都清晰可讀。第一頁的晶岩紋路在紙面上微微發光，第二頁的殘骸影像像是浮在紙面上，有立體感。</div>
+天書上現在有 ${bookEntries.length} 頁了。你翻了翻，確認兩頁都清晰可讀。第一頁的晶岩紋路在紙面上微微發光，第二頁的殘骸影像像是浮在紙面上，有立體感。</div>
+    ${showInv()}
     ${showBook()}
-    <button class="choice" onclick="sceneDeeper()">繼續深入戰場</button>
+    <button class="choice" onclick="sceneRift()">繼續深入，尋找時光裂隙</button>
+    <button class="choice" onclick="sceneMemory()">探索戰場遺跡</button>
     <button class="choice" onclick="sceneEnd()">離開戰場</button>
   `);
 }
 
-function sceneDeeper() {
-  render(`
-    <h1>時光師</h1>
-    <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">四 · 深入</div>
-    <div class="text">你繼續往戰場深處走。
-
-溝的兩邊，破壞的痕跡越走越重。有些地方的土已經完全變色——暗金色和青綠色交織在一起，像大理石的紋路。偶爾你能看到一些完整的物件：一塊刻著符號的石板、半截的金屬武器、一個已經碎裂的容器。它們散落在地上，像被巨人隨手丟棄的玩具。
-
-你注意到一個現象：越往深處走，空氣中的壓迫感越強。不是令人窒息的那種，而是一種重量感，像是空氣本身變稠了。你的每一步都需要多花一點力氣。
-
-走了大約二十分鐘，你來到戰場的中心。這裡有一個圓形的空地，直徑大約三十步。空地的中心有一個東西——</div>
-    <button class="choice" onclick="sceneRift()">走近看</button>
-  `);
-}
-
+// ==================== 第四幕：抉擇 ====================
 function sceneRift() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">四 · 時光裂隙</div>
-    <div class="text">空地中心的東西是一道裂縫。
+    <div class="act-title">第四幕 · 時光裂隙</div>
+    <div class="text">你繼續往戰場深處走。
+
+溝的兩邊，破壞的痕跡越走越重。有些地方的土已經完全變色——暗金色和青綠色交織在一起，像大理石的紋路。偶爾你能看到一些完整的物件：一塊刻著符號的石板、半截的金屬武器、一個已經碎裂的容器。它們散落在地上，像被巨人隨手丟棄的玩具。
+
+走了大約二十分鐘，你來到戰場的中心。這裡有一個圓形的空地，直徑大約三十步。空地的中心有一道裂縫。
 
 不是地面的裂縫，是空氣中的裂縫。它懸浮在離地面半步高的地方，長度大約兩臂展開，寬度只有指頭寬。裂縫的邊緣是金色和青色交織的光，和規則晶岩的顏色一樣，但更亮、更活躍。
 
@@ -340,16 +398,18 @@ function sceneRift() {
 你站在裂縫前。你能感覺到裂縫裡有東西在動，像水在流動。你能聽到聲音——很遠、很輕，像是很多人在說話，但聽不清楚內容。
 
 時光裂隙。戰鬥的餘波撕開了時間的縫隙，讓另一個時刻的影像漏了出來。</div>
+    ${showInv()}
     <button class="choice" onclick="lookRift()">靠近裂隙看</button>
     <button class="choice" onclick="sealRift()">不靠近，直接記</button>
   `);
 }
 
 function lookRift() {
+  inventory.riftSeen = true;
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">四 · 窺視</div>
+    <div class="act-title">第四幕 · 窺視</div>
     <div class="text">你走近裂縫，把臉湊到裂縫前。
 
 裂縫裡的畫面很模糊，像隔著磨砂玻璃看東西。你能看出來那是一個戰場——和這個戰場很像，但不完全一樣。天空的裂痕方向不同，地上的溝也不同。戰場上有影子在移動，人形的，但看不清楚是誰。
@@ -360,7 +420,10 @@ function lookRift() {
 
 然後裂縫暗了。畫面消失了。裂縫裡只剩下微弱的光在流動。
 
-你退後一步。裂縫還在，但裡面的影像已經看不到了。</div>
+你退後一步。裂縫還在，但裡面的影像已經看不到了。
+
+你注意到裂縫的邊緣有東西——幾片小的晶體，像晶岩的碎片，散落在裂縫下方的地上。你撿起一片，它比晶岩更亮，也更溫。你把它放進口袋，決定帶走。</div>
+    ${showInv()}
     <button class="choice" onclick="recordRift()">把裂隙和裡面的影像記下來</button>
   `);
 }
@@ -369,59 +432,63 @@ function sealRift() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">四 · 記</div>
+    <div class="act-title">第四幕 · 記</div>
     <div class="text">你沒有靠近裂縫。作為時光師，你只記錄，不介入——即使是另一個時間的影像。
 
-你站在安全的距離外，把裂縫的位置、形狀、光的顏色，以及它透出的聲音，都記在心裡。</div>
+你站在安全的距離外，把裂縫的位置、形狀、光的顏色，以及它透出的聲音，都記在心裡。裂縫的邊緣有幾片晶體散落，但你沒有撿，只是記下位置。</div>
+    ${showInv()}
     <button class="choice" onclick="recordRift()">記下來</button>
   `);
 }
 
 function recordRift() {
-  addBookEntry('第三頁：時光裂隙——戰場中心懸浮的時間縫隙，透出另一個時刻的影像。裂隙中曾見到一個人影站在兩股力量的交界處。');
+  addBookEntry('第三頁：時光裂隙——戰場中心懸浮的時間縫隙，透出另一個時刻的影像。裂隙中曾見到一個人影站在兩股力量的交界處，身上同時散發金色與青色的光。裂縫邊緣散落晶體碎片。');
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">四 · 記</div>
+    <div class="act-title">第四幕 · 記</div>
     <div class="text">墨筆劃過紙面。裂縫的形狀和光的顏色被複製到天書上。雖然裂縫裡的影像無法完全記錄，但你能把看到的輪廓和聽到的聲音記下來。
 
-天書上現在有三頁了。</div>
+天書上現在有 ${bookEntries.length} 頁了。</div>
+    ${showInv()}
     ${showBook()}
-    <button class="choice" onclick="sceneMemory()">繼續探索戰場</button>
+    <button class="choice" onclick="sceneMemory()">探索戰場遺跡</button>
     <button class="choice" onclick="sceneEnd()">離開戰場</button>
   `);
 }
 
+// ==================== 第五幕：遺跡 ====================
 function sceneMemory() {
+  inventory.explored = true;
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">五 · 遺跡</div>
-    <div class="text">你離開裂隙，繼續在戰場上走。
+    <div class="act-title">第五幕 · 遺跡</div>
+    <div class="text">除了主戰場和裂隙，戰場的邊緣還有許多散落的遺跡。你挑了幾處查看：
 
-除了主戰場和裂隙，戰場的邊緣還有許多散落的遺跡。你挑了幾處查看：
+一處是半埋在土裡的石碑。石碑上的文字已經磨損大半，你能辨認出的只有幾個字——像是某個名字，和一個數字。數字很大，你猜是年份。石碑的底部有裂痕，像是被什麼東西撞過。石碑的材質不是這個戰場常見的石頭——它更硬、更細緻，表面有細微的紋路，像是被某種工具精雕過。
 
-一處是半埋在土裡的石碑。石碑上的文字已經磨損大半，你能辨認出的只有幾個字——像是某個名字，和一個數字。數字很大，你猜是年份。石碑的底部有裂痕，像是被什麼東西撞過。
+一處是戰場邊緣的一小片空地，地上有燒焦的痕跡，形成一個圓形。圓形的中心有什麼東西被燒掉了，只剩下灰。灰的顏色不均勻——有些地方偏白，有些地方偏黑，像是兩種不同的東西被一起燒掉。你蹲下來，用手指捻了一點灰。灰很細，像粉末，但觸感不一樣——白色的部分像粉筆灰，黑色的部分像炭灰。
 
-一處是戰場邊緣的一小片空地，地上有燒焦的痕跡，形成一個圓形。圓形的中心有什麼東西被燒掉了，只剩下灰。灰的顏色不均勻——有些地方偏白，有些地方偏黑，像是兩種不同的東西被一起燒掉。
-
-一處是溝渠的盡頭。溝渠從主戰場一直延伸到這裡，約莫百步長。盡頭的地方土被挖開了，露出底下的岩層。岩層上有一道很深的劃痕，像是被刀砍的，但規模比刀大得多——像是被一整面牆砍下來。
+一處是溝渠的盡頭。溝渠從主戰場一直延伸到這裡，約莫百步長。盡頭的地方土被挖開了，露出底下的岩層。岩層上有一道很深的劃痕，像是被刀砍的，但規模比刀大得多——像是被一整面牆砍下來。劃痕的深度約莫一指，寬度約莫一掌，長度至少三步。劃痕的邊緣很整齊，不是撕裂的，是切的。
 
 你把這些都記在心裡，但沒有全部記入天書。天書的頁面有限，你要挑最重要的記。</div>
+    ${showInv()}
     <button class="choice" onclick="recordMemory()">把這些遺跡記入天書</button>
     <button class="choice" onclick="skipMemory()">不記，留給下一次</button>
   `);
 }
 
 function recordMemory() {
-  addBookEntry('第四頁：戰場遺跡——石碑（殘缺文字與年份）、燒焦圓形空地（兩種灰燼）、溝渠盡頭的岩層劃痕。');
+  addBookEntry('第四頁：戰場遺跡——石碑（殘缺文字與年份、精雕材質）、燒焦圓形空地（兩種灰燼：粉筆灰與炭灰）、溝渠盡頭的岩層劃痕（深一指、寬一掌、長至少三步，切面整齊）。');
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">五 · 記</div>
-    <div class="text">你把三處遺跡的特徵記入天書。紙面上浮現出石碑的輪廓、圓形空地的形狀、和岩層劃痕的走向。
+    <div class="act-title">第五幕 · 記</div>
+    <div class="text">你把三處遺跡的特徵記入天書。紙面上浮現出石碑的輪廓、圓形空地的形狀、和岩層劃痕的走向。石碑的精雕紋路、灰燼的兩種質地、劃痕的整齊切面，都被複製到紙上。
 
-天書上現在有四頁了。</div>
+天書上現在有 ${bookEntries.length} 頁了。</div>
+    ${showInv()}
     ${showBook()}
     <button class="choice" onclick="sceneEnd()">離開戰場</button>
   `);
@@ -431,28 +498,31 @@ function skipMemory() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">五 · 離</div>
-    <div class="text">你決定不記這些。天書的頁面有限，你要留給更重要的東西。這些遺跡會一直在這裡，等你下次降臨再記。
+    <div class="act-title">第五幕 · 離</div>
+    <div class="text">你決定不記這些。天書的頁面有限，你要留給更重要的東西。這些遺跡會一直在這裡，等你下次降臨再記。石碑上的文字、燒焦空地的灰燼、岩層的劃痕——它們不會消失，它們只是在等。
 
 你轉身，準備離開戰場。</div>
+    ${showInv()}
     <button class="choice" onclick="sceneEnd()">離開</button>
   `);
 }
 
+// ==================== 終幕：離去 ====================
 function sceneEnd() {
   render(`
     <h1>時光師</h1>
     <div class="subtitle">文字互動體驗</div>
-    <div class="scene-title">終 · 離去</div>
+    <div class="act-title">終幕 · 離去</div>
     <div class="text">你背著天書，消失在暮色裡。
 
 今天的收穫：天書裡記了 ${bookEntries.length} 頁。每一頁都是一個時刻的切片，等這個時代被遺忘得差不多了，它們會再見到光。
 
-但你帶走的不只是這些頁面。你帶走的是對這片戰場的記憶——焦土的觸感、裂縫裡漏出的光、殘骸的溫度、石碑上磨損的文字。這些記憶不會寫在天書上，但它們會在你心裡。
+但你帶走的不只是這些頁面。你帶走的是對這片戰場的記憶——焦土的觸感、裂縫裡漏出的光、殘骸的溫度、石碑上磨損的文字、灰燼的細膩質感。這些記憶不會寫在天書上，但它們會在你心裡。
 
-下次降臨，你會記下不同的東西。</div>
+下次降臨，你會記下不同的東西。也許是另一個戰場，也許是同一個戰場的另一個時刻。天書的頁面有限，但記憶無限。</div>
+    ${showInv()}
     ${showBook()}
-    <div class="restart"><button onclick="location.reload()">重新體驗</button></div>
+    <div class="restart"><button type="button" onclick="window.location.reload()">重新體驗</button></div>
   `);
 }
 
